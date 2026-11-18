@@ -34,7 +34,7 @@ C#과 WPF를 활용하여 로봇청소기의 이동 및 청소 경로를 시뮬�
 | 구분 | 기술 |
 |---|---|
 | Language | C# |
-| Framework | WPF |
+| Framework | WPF, MVVM |
 | UI | XAML |
 | IDE | Visual Studio |
 
