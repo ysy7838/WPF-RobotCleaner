@@ -1,5 +1,210 @@
 <UserControl x:Class="WPF_Project.Views.DashboardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid />
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:WPF_Project.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1040" d:DesignHeight="720"
+             d:DataContext="{d:DesignInstance Type=vm:DashboardViewModel, IsDesignTimeCreatable=True}"
+             Background="#F3F6FA" Foreground="#1B2C43"
+             FontFamily="Malgun Gothic" FontSize="14"
+             UseLayoutRounding="True">
+    <UserControl.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DFE6EE" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="22" />
+        </Style>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#53667C" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="Metric" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,10,0,0" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="#1B2C43" />
+            <Setter Property="BorderBrush" Value="#BCCAD9" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                                CornerRadius="7" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.8" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.65" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.4" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="28">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Margin="0,0,0,22">
+                <TextBlock Text="ROBOT CLEANER" Foreground="#137B68" FontSize="12"
+                           FontWeight="Bold" />
+                <TextBlock Text="청소 대시보드" FontSize="28" FontWeight="Bold" Margin="0,6,0,6" />
+                <TextBlock Text="로봇의 현재 위치와 청소 현황을 한눈에 확인하세요."
+                           Style="{StaticResource Label}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,16">
+                <StackPanel>
+                    <WrapPanel VerticalAlignment="Center">
+                        <TextBlock Text="실행 상태" Style="{StaticResource Label}"
+                                   VerticalAlignment="Center" Margin="0,0,16,0" />
+                        <Border CornerRadius="6" Padding="12,6" Margin="0,0,12,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#EDF1F6" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RunState}" Value="{x:Static vm:DashboardRunState.Running}">
+                                            <Setter Property="Background" Value="#DDF4EB" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding RunState}" Value="{x:Static vm:DashboardRunState.Paused}">
+                                            <Setter Property="Background" Value="#FFF0CF" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding RunState}" Value="{x:Static vm:DashboardRunState.Completed}">
+                                            <Setter Property="Background" Value="#DFEDFF" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding StatusText, Mode=OneWay}" FontWeight="Bold"
+                                       AutomationProperties.LiveSetting="Polite" />
+                        </Border>
+                        <TextBlock Text="{Binding DataSourceText, Mode=OneWay}" Foreground="#456691"
+                                   FontSize="12" VerticalAlignment="Center" />
+                    </WrapPanel>
+                    <TextBlock Text="{Binding DataSourceDescription, Mode=OneWay}" Margin="0,14,0,16"
+                               Style="{StaticResource Label}" TextWrapping="Wrap" />
+                    <WrapPanel>
+                        <Button Content="데모 시작 / 재개" Command="{Binding StartDemoCommand}"
+                                Background="#137B68" Foreground="White" BorderBrush="#137B68" />
+                        <Button Content="일시정지" Command="{Binding PauseDemoCommand}" />
+                        <Button Content="데모 초기화" Command="{Binding ResetDemoCommand}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <UniformGrid Grid.Row="2" Columns="2" Margin="0,0,0,16">
+                <Border Style="{StaticResource Card}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="현재 위치 (X, Y)" Style="{StaticResource Label}" />
+                        <TextBlock Text="{Binding Position, Mode=OneWay}" Style="{StaticResource Metric}" />
+                        <TextBlock Text="격자 좌표 · 시작 위치 (0, 0)" Style="{StaticResource Label}"
+                                   Margin="0,6,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="누적 이동 거리" Style="{StaticResource Label}" />
+                        <TextBlock Text="{Binding Distance, Mode=OneWay, StringFormat={}{0:N0}칸}"
+                                   Style="{StaticResource Metric}" />
+                        <TextBlock Text="격자 사이를 이동한 횟수" Style="{StaticResource Label}"
+                                   Margin="0,6,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="청소 진행률" Style="{StaticResource Label}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Progress, Mode=OneWay, StringFormat={}{0:0.#}%}"
+                               FontSize="26" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                    <ProgressBar Grid.Row="1" Value="{Binding Progress, Mode=OneWay}" Minimum="0" Maximum="100"
+                                 Height="12" Margin="0,14,0,10" Foreground="#137B68" Background="#E8EEF4"
+                                 BorderThickness="0" AutomationProperties.Name="청소 진행률" />
+                    <TextBlock Grid.Row="2" Text="{Binding CoverageText, Mode=OneWay}"
+                               Style="{StaticResource Label}" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="4" Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="작업 로그" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <Button Content="로그 지우기" Command="{Binding ClearLogsCommand}" HorizontalAlignment="Right"
+                            Padding="12,6" MinHeight="32" Margin="0" />
+                    <Grid Grid.Row="1" Margin="0,14,0,10">
+                        <ListBox ItemsSource="{Binding Logs}" Height="160" BorderThickness="0" Background="#F7F9FC"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                 AutomationProperties.Name="작업 로그">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="8,5"
+                                               FontSize="12" Foreground="#3E536B" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                        <TextBlock Text="기록된 로그가 없습니다." HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" IsHitTestVisible="False" Foreground="#53667C">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Logs.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <WrapPanel Grid.Row="2">
+                        <TextBlock Text="최신순 · 최대 200개" Style="{StaticResource Label}" FontSize="11" Margin="0,0,20,0" />
+                        <TextBlock Text="최근 갱신  " Style="{StaticResource Label}" FontSize="11" />
+                        <TextBlock Text="{Binding LastUpdatedText, Mode=OneWay}" Style="{StaticResource Label}" FontSize="11" />
+                    </WrapPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </UserControl>
