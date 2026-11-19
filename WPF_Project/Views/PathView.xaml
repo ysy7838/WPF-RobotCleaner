@@ -1,5 +1,6 @@
 <UserControl x:Class="WPF_Project.Views.PathView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- TODO(7): PathViewModel의 PathStep 컬렉션을 ListView 또는 맵 시각화 컨트롤에 바인딩하세요. -->
     <Grid />
 </UserControl>
