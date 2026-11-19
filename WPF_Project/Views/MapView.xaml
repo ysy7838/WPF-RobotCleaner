@@ -3,22 +3,28 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:WPF_Project.ViewModels">
 
-    <UserControl.DataContext>
-        <vm:MapViewModel />
-    </UserControl.DataContext>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="RobotVisibility"/>
+    </UserControl.Resources>
 
     <Grid Background="#FFF7FA">
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Robot Cleaner Map"
-                   FontSize="22"
+        <!-- 맵 제목 -->
+        <TextBlock Grid.Row="0"
+                   Text="Robot Cleaner Map"
+                   FontSize="24"
                    FontWeight="Bold"
+                   Foreground="#555555"
                    HorizontalAlignment="Center"
-                   Margin="10"/>
+                   Margin="15"/>
 
+        <!-- 7x7 맵 -->
         <ItemsControl Grid.Row="1"
                       ItemsSource="{Binding Cells}"
                       HorizontalAlignment="Center"
@@ -34,17 +40,84 @@
                 <DataTemplate>
                     <Border Width="55"
                             Height="55"
-                            Background="White"
+                            Background="{Binding CellColor}"
                             BorderBrush="#A0A0A0"
                             BorderThickness="1"
                             Margin="2">
-                        <TextBlock Text="{Binding Row}"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   Foreground="#555555"/>
+
+                        <Grid>
+                            <TextBlock Text="{Binding CellType}"
+                                       FontSize="10"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="#333333"/>
+                            <Border Width="21" Height="21" Margin="2"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Background="#FFF7FA"
+                                    CornerRadius="5"
+                                    ToolTip="로봇 현재 위치"
+                                    Visibility="{Binding HasRobot, Converter={StaticResource RobotVisibility}}">
+                                <TextBlock Text="🤖" FontFamily="Segoe UI Emoji" FontSize="13"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
+
         </ItemsControl>
+
+        <!-- 하단 버튼 패널 -->
+        <Grid Grid.Row="2"
+              Margin="15">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 맵 초기화 -->
+            <Button Grid.Column="0"
+                    Content="Reset Map"
+                    Command="{Binding ResetCommand}"
+                    Background="#F6C5D0"
+                    Foreground="#555555"
+                    FontWeight="Bold"
+                    FontSize="14"
+                    Height="45"
+                    Margin="5"
+                    BorderThickness="0"/>
+
+            <!-- 대시보드 -->
+            <Button Grid.Column="1"
+                    Content="Dashboard"
+                    Command="{Binding DashboardCommand}"
+                    Background="#C8E6C9"
+                    Foreground="#555555"
+                    FontWeight="Bold"
+                    FontSize="14"
+                    Height="45"
+                    Margin="5"
+                    BorderThickness="0"/>
+
+            <!-- 로봇 움직이기 -->
+            <Button Grid.Column="2"
+                    Content="Move Robot"
+                    Command="{Binding MoveRobotCommand}"
+                    Background="#D8C8F0"
+                    Foreground="#555555"
+                    FontWeight="Bold"
+                    FontSize="14"
+                    Height="45"
+                    Margin="5"
+                    BorderThickness="0"/>
+
+        </Grid>
+
     </Grid>
 </UserControl>

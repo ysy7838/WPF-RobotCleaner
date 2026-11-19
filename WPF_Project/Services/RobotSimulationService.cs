@@ -5,12 +5,13 @@ namespace WPF_Project.Services;
 
 public class RobotSimulationService : ObservableObject
 {
-    private readonly RobotModel _robot;
     private IReadOnlyList<Position> _path = Array.Empty<Position>();
     private int _nextIndex;
-    private bool _isRunning;
-    private bool _isPaused;
+    private CancellationTokenSource? _movementCancellation;
 
+    public RobotModel Robot { get; }
+    public bool IsRunning => _movementCancellation is not null;
+    public bool HasPath => _path.Count > 0;
     public bool HasNextStep => _nextIndex < _path.Count;
 
     public double ProgressPercent => _path.Count switch
@@ -22,52 +23,38 @@ public class RobotSimulationService : ObservableObject
 
     public RobotSimulationService(RobotModel robot)
     {
-        _robot = robot;
+        Robot = robot;
     }
 
     public void LoadPath(IReadOnlyList<Position> path)
     {
-        if (_isRunning)
-        {
-            return;
-        }
-
+        Stop();
         _path = path.ToArray();
-        _nextIndex = 1;
-
-        if (_path.Count > 0)
-        {
-            _robot.SetPosition(_path[0]);
-        }
-
-        OnPropertyChanged(nameof(ProgressPercent));
+        ResetPosition();
+        OnPropertyChanged(nameof(HasPath));
     }
 
     public bool MoveNext()
     {
-        if (!HasNextStep || _isPaused)
+        if (IsRunning || !HasNextStep)
         {
             return false;
         }
 
-        var nextPosition = _path[_nextIndex];
-        _nextIndex++;
-        _robot.SetPosition(nextPosition);
-        OnPropertyChanged(nameof(ProgressPercent));
-
+        Advance();
         return true;
     }
 
     public async Task StartAsync()
     {
-        if (_isRunning || !HasNextStep)
+        if (IsRunning || !HasNextStep)
         {
             return;
         }
 
         using var cancellation = new CancellationTokenSource();
         _movementCancellation = cancellation;
-        _isRunning = true;
+        OnPropertyChanged(nameof(IsRunning));
 
         try
         {
@@ -75,49 +62,64 @@ public class RobotSimulationService : ObservableObject
             {
                 await Task.Delay(500, cancellation.Token);
                 cancellation.Token.ThrowIfCancellationRequested();
-                MoveNext();
+                Advance();
             }
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
-            // 초기화 요청으로 이동을 종료합니다.
+            // 정지, 초기화, 또는 새 경로를 불러올 때 기존 이동을 종료합니다.
         }
         finally
         {
-            _movementCancellation = null;
-            _isPaused = false;
-            _isRunning = false;
+            if (_movementCancellation == cancellation)
+            {
+                _movementCancellation = null;
+                OnPropertyChanged(nameof(IsRunning));
+            }
         }
+    }
+
+    public void Stop()
+    {
+        var cancellation = _movementCancellation;
+        if (cancellation is null)
+        {
+            return;
+        }
+
+        _movementCancellation = null;
+        cancellation.Cancel();
+        OnPropertyChanged(nameof(IsRunning));
     }
 
     public void Reset()
     {
-        _movementCancellation?.Cancel();
-        _isPaused = false;
-        _nextIndex = 1;
+        Stop();
+        ResetPosition();
+    }
 
-        if (_path.Count > 0)
+    private void Advance()
+    {
+        var position = _path[_nextIndex];
+        _nextIndex++;
+        Robot.SetPosition(position);
+        NotifyProgress();
+    }
+
+    private void ResetPosition()
+    {
+        _nextIndex = 1;
+        if (HasPath)
         {
-            _robot.SetPosition(_path[0]);
+            Robot.SetPosition(_path[0]);
         }
 
+        NotifyProgress();
+    }
+
+    private void NotifyProgress()
+    {
+        OnPropertyChanged(nameof(HasNextStep));
         OnPropertyChanged(nameof(ProgressPercent));
     }
-
-    public void Pause()
-    {
-        if (_isRunning)
-        {
-            _isPaused = true;
-        }
-    }
-
-    public void Resume()
-    {
-        _isPaused = false;
-    }
-
-    private CancellationTokenSource? _movementCancellation;
-
-    public RobotModel Robot => _robot;
 }

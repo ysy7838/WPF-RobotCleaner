@@ -1,13 +1,25 @@
 <Window x:Class="WPF_Project.MainWindow"
-		x:Name ="SimulationPanel"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WPF_Project"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        xmlns:vm="clr-namespace:WPF_Project.ViewModels"
+        xmlns:views="clr-namespace:WPF_Project.Views"
+        Title="Robot Cleaner"
+        Width="600"
+        Height="650"
+        WindowStartupLocation="CenterScreen">
 
+    <Window.Resources>
+
+        <!-- MapViewModel과 MapView 연결 -->
+        <DataTemplate DataType="{x:Type vm:MapViewModel}">
+            <views:MapView/>
+        </DataTemplate>
+
+    </Window.Resources>
+
+    <Grid>
+        <!-- 현재 ViewModel에 해당하는 View 표시 -->
+        <ContentControl Content="{Binding CurrentViewModel}"/>
     </Grid>
+
 </Window>
