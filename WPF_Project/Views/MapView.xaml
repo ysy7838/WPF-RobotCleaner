@@ -1,5 +1,50 @@
 <UserControl x:Class="WPF_Project.Views.MapView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid />
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WPF_Project.ViewModels">
+
+    <UserControl.DataContext>
+        <vm:MapViewModel />
+    </UserControl.DataContext>
+
+    <Grid Background="#FFF7FA">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Robot Cleaner Map"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="10"/>
+
+        <ItemsControl Grid.Row="1"
+                      ItemsSource="{Binding Cells}"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center">
+
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="7" Columns="7"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Width="55"
+                            Height="55"
+                            Background="White"
+                            BorderBrush="#A0A0A0"
+                            BorderThickness="1"
+                            Margin="2">
+                        <TextBlock Text="{Binding Row}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="#555555"/>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
 </UserControl>
