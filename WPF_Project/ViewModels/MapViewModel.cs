@@ -54,84 +54,40 @@ namespace WPF_Project.ViewModels
                 }
             }
 
-            // 시작점과 끝점 랜덤 선택
-            Position start = GetRandomEdgePosition();
-            Position end;
+            // 시작점과 끝점 고정
+            Position start = new Position(0, 0);
+            Position end = new Position(6, 6);
 
-            do
-            {
-                end = GetRandomEdgePosition();
-            }
-            while (start.Row == end.Row &&
-                   start.Column == end.Column);
+            // 시작점과 끝점 지정
+            SetCell(start, "Start", Brushes.Red);
+            SetCell(end, "End", Brushes.Blue);
 
-            // 장애물 개수 랜덤 선택
+            // 장애물 개수 랜덤 선택 (3~15개)
             int obstacleCount = random.Next(3, 16);
 
-            bool pathFound = false;
+            // 장애물 랜덤 배치
+            int placedCount = 0;
 
-            // BFS 경로가 존재하는 맵이 나올 때까지 재생성
-            while (!pathFound)
+            while (placedCount < obstacleCount)
             {
-                // 장애물 초기화
-                foreach (MapCell cell in Cells)
+                int row = random.Next(0, MapSize);
+                int col = random.Next(0, MapSize);
+
+                MapCell cell = GetCell(row, col);
+
+                // 시작점, 끝점 및 기존 장애물 위치 제외
+                if (cell.CellType != "Empty")
                 {
-                    cell.CellType = "Empty";
-                    cell.CellColor = Brushes.White;
+                    continue;
                 }
 
-                // 시작점과 끝점 지정
-                SetCell(start, "Start", Brushes.Red);
-                SetCell(end, "End", Brushes.Blue);
+                cell.CellType = "Obstacle";
+                cell.CellColor = Brushes.Gray;
 
-                // 장애물 랜덤 배치
-                int placedCount = 0;
-
-                while (placedCount < obstacleCount)
-                {
-                    int row = random.Next(0, MapSize);
-                    int col = random.Next(0, MapSize);
-
-                    MapCell cell = GetCell(row, col);
-
-                    if (cell.CellType != "Empty")
-                    {
-                        continue;
-                    }
-
-                    cell.CellType = "Obstacle";
-                    cell.CellColor = Brushes.Gray;
-
-                    placedCount++;
-                }
-
-                // BFS로 도착 가능 여부 확인
-                pathFound = IsPathAvailable(start, end);
+                placedCount++;
             }
 
             OnPropertyChanged(nameof(Cells));
-        }
-
-        // 가장자리 좌표 중 랜덤 선택
-        private Position GetRandomEdgePosition()
-        {
-            int side = random.Next(0, 4);
-            int position = random.Next(0, MapSize);
-
-            switch (side)
-            {
-                case 0:
-                    return new Position(0, position);
-
-                case 1:
-                    return new Position(MapSize - 1, position);
-
-                case 2:
-                    return new Position(position, 0);
-
-                default:
-                    return new Position(position, MapSize - 1);
-            }
         }
 
         // 특정 좌표의 셀 가져오기
@@ -152,71 +108,6 @@ namespace WPF_Project.ViewModels
 
             cell.CellType = type;
             cell.CellColor = color;
-        }
-
-        // BFS 경로 검증
-        private bool IsPathAvailable(
-            Position start,
-            Position end)
-        {
-            bool[,] visited = new bool[MapSize, MapSize];
-
-            Queue<Position> queue = new Queue<Position>();
-
-            // 상, 하, 좌, 우 이동
-            int[] rowDirections = { -1, 1, 0, 0 };
-            int[] colDirections = { 0, 0, -1, 1 };
-
-            queue.Enqueue(start);
-            visited[start.Row, start.Column] = true;
-
-            while (queue.Count > 0)
-            {
-                Position current = queue.Dequeue();
-
-                // 도착점 도달
-                if (current.Row == end.Row &&
-                    current.Column == end.Column)
-                {
-                    return true;
-                }
-
-                for (int i = 0; i < 4; i++)
-                {
-                    int nextRow =
-                        current.Row + rowDirections[i];
-
-                    int nextCol =
-                        current.Column + colDirections[i];
-
-                    // 맵 범위 확인
-                    if (nextRow < 0 || nextRow >= MapSize ||
-                        nextCol < 0 || nextCol >= MapSize)
-                    {
-                        continue;
-                    }
-
-                    // 방문 여부 확인
-                    if (visited[nextRow, nextCol])
-                    {
-                        continue;
-                    }
-
-                    // 장애물 확인
-                    if (GetCell(nextRow, nextCol).CellType
-                        == "Obstacle")
-                    {
-                        continue;
-                    }
-
-                    visited[nextRow, nextCol] = true;
-
-                    queue.Enqueue(
-                        new Position(nextRow, nextCol));
-                }
-            }
-
-            return false;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
