@@ -1,5 +1,3 @@
 namespace WPF_Project.Models;
 
-public class Position
-{
-}
+public readonly record struct Position(int Row, int Column);
