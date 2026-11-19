@@ -80,15 +80,10 @@ public class PathfindingService
         Position start,
         Position goal)
     {
-        var path = new List<Position>(); // 경로 저장 리스트
+        var path = new List<Position>(); // 경로를 저장할 리스트
         var current = goal;
 
-        while (current != start)var path = pathfindingService.FindPath(map, start, goal);
-
-foreach (var position in path)
-{
-    Console.WriteLine($"Row: {position.Row}, Column: {position.Column}");
-}
+        while (current != start)
         {
             path.Add(current);
             current = parents[current.Row, current.Column];
