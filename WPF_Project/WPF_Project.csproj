@@ -12,6 +12,8 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
 
+  <!-- TODO(9): Add a separate WPF_Project.Tests project for service and algorithm unit tests. -->
+
   <ItemGroup>
     <Resource Include="Assets\RobotVacuum.png" />
   </ItemGroup>

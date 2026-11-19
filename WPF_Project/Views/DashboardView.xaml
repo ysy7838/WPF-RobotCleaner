@@ -1,5 +1,6 @@
 <UserControl x:Class="WPF_Project.Views.DashboardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- TODO(6): DashboardViewModel의 통계 속성을 카드, 상태 표시, 현재 알고리즘 영역에 바인딩하세요. -->
     <Grid />
 </UserControl>

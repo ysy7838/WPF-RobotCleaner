@@ -1,152 +1,218 @@
 <UserControl x:Class="WPF_Project.Views.MapView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             UseLayoutRounding="True">
-
+             UseLayoutRounding="True"
+             Background="#F7F7F7">
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="RobotVisibility"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibility"/>
         <BitmapImage x:Key="RobotIcon"
                      UriSource="pack://application:,,,/WPF_Project;component/Assets/RobotVacuum.png"/>
-        <Style x:Key="MapTile" TargetType="Border">
-            <Setter Property="Background" Value="{Binding CellColor}"/>
-            <Setter Property="BorderBrush" Value="#E4DEE9"/>
+
+        <Style x:Key="ToolButton" TargetType="Button">
+            <Setter Property="Height" Value="43"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Padding" Value="11,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#C9C9C9"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding CellType}" Value="Empty">
-                    <Setter Property="Background" Value="#FFFDF8"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding CellType}" Value="Obstacle">
-                    <Setter Property="Background" Value="#DAD2E3"/>
-                    <Setter Property="BorderBrush" Value="#C9BED4"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding CellType}" Value="Start">
-                    <Setter Property="Background" Value="#D6EFE3"/>
-                    <Setter Property="BorderBrush" Value="#AEDAC5"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding CellType}" Value="End">
-                    <Setter Property="Background" Value="#E9DEF7"/>
-                    <Setter Property="BorderBrush" Value="#D4BFEA"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding HasRobot}" Value="True">
-                    <Setter Property="BorderBrush" Value="#614296"/>
-                    <Setter Property="BorderThickness" Value="2"/>
-                </DataTrigger>
-            </Style.Triggers>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#444444"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
-        <Style x:Key="MapTileLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#494055"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+        <Style x:Key="PanelButton" TargetType="Button">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#C9C9C9"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#333333"/>
+        </Style>
+
+        <Style x:Key="MapCell" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#D9DDE3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
+                <DataTrigger Binding="{Binding CellType}" Value="Obstacle">
+                    <Setter Property="Background" Value="#707070"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="BorderBrush" Value="#707070"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding CellType}" Value="Restricted">
+                    <Setter Property="Background" Value="#FFE5E1"/>
+                    <Setter Property="Foreground" Value="#B34B42"/>
+                    <Setter Property="BorderBrush" Value="#F16B60"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding CellType}" Value="Start">
+                    <Setter Property="BorderBrush" Value="#2E64D6"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                    <Setter Property="Foreground" Value="#2E64D6"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding CellType}" Value="End">
+                    <Setter Property="Background" Value="#2E64D6"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="BorderBrush" Value="#2E64D6"/>
+                </DataTrigger>
                 <DataTrigger Binding="{Binding HasRobot}" Value="True">
-                    <Setter Property="VerticalAlignment" Value="Bottom"/>
-                    <Setter Property="Margin" Value="0,0,0,5"/>
+                    <Setter Property="BorderBrush" Value="#222222"/>
+                    <Setter Property="BorderThickness" Value="2"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="#FFF7FA">
-
+    <Grid Background="#F7F7F7">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="55"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="80"/>
         </Grid.RowDefinitions>
 
-        <!-- 맵 제목 -->
-        <TextBlock Grid.Row="0"
-                   Text="Robot Cleaner Map"
-                   FontSize="24"
-                   FontWeight="Bold"
-                   Foreground="#555555"
-                   HorizontalAlignment="Center"
-                   Margin="15"/>
+        <Border Grid.Row="0" Background="White" BorderBrush="#D5D5D5" BorderThickness="0,0,0,1">
+            <Grid Margin="23,0">
+                <TextBlock Text="WPF-RobotCleaner · 로봇청소기 시뮬레이터"
+                           VerticalAlignment="Center" FontSize="18" FontWeight="Bold" Foreground="#333333"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="편집 모드" Width="92" Command="{Binding ToggleEditModeCommand}"
+                            Background="#2E64D6" Foreground="White" BorderBrush="#2E64D6" Margin="0,10,0,10"/>
+                    <Button Content="시뮬레이션 모드" Width="130" Command="{Binding ToggleSimulationModeCommand}"
+                            Background="White" Foreground="#444444" BorderBrush="#C9C9C9" Margin="0,10,0,10"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-        <!-- 7x7 맵 -->
-        <ItemsControl Grid.Row="1"
-                      ItemsSource="{Binding Cells}"
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center">
-
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="7" Columns="7"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Width="55" Height="55" Margin="2"
-                            Style="{StaticResource MapTile}">
-                        <Grid>
-                            <Image Source="{StaticResource RobotIcon}"
-                                   Width="36" Height="34" Margin="0,1,0,0"
-                                   HorizontalAlignment="Center" VerticalAlignment="Top"
-                                   RenderOptions.BitmapScalingMode="HighQuality"
-                                   AutomationProperties.Name="로봇 현재 위치"
-                                   ToolTip="로봇 현재 위치"
-                                   Visibility="{Binding HasRobot, Converter={StaticResource RobotVisibility}}"/>
-                            <TextBlock Text="{Binding CellType}"
-                                       Style="{StaticResource MapTileLabel}"/>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-
-        </ItemsControl>
-
-        <!-- 하단 버튼 패널 -->
-        <Grid Grid.Row="2"
-              Margin="15">
-
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="228"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="315"/>
             </Grid.ColumnDefinitions>
 
-            <!-- 맵 초기화 -->
-            <Button Grid.Column="0"
-                    Content="Reset Map"
-                    Command="{Binding ResetCommand}"
-                    Background="#F6C5D0"
-                    Foreground="#555555"
-                    FontWeight="Bold"
-                    FontSize="14"
-                    Height="45"
-                    Margin="5"
-                    BorderThickness="0"/>
+            <Border Grid.Column="0" Background="White" BorderBrush="#D5D5D5" BorderThickness="0,0,1,0" Padding="20,28">
+                <StackPanel>
+                    <TextBlock Text="맵 편집 도구" FontWeight="Bold" Foreground="#555555" Margin="0,0,0,14"/>
+                    <Button Style="{StaticResource ToolButton}" Content="S   로봇 시작 위치"
+                            Command="{Binding SelectToolCommand}" CommandParameter="Start"/>
+                    <Button Style="{StaticResource ToolButton}" Content="G   목적지 / 충전 스테이션"
+                            Command="{Binding SelectToolCommand}" CommandParameter="End"/>
+                    <Button Style="{StaticResource ToolButton}" Content="■   장애물"
+                            Command="{Binding SelectToolCommand}" CommandParameter="Obstacle"/>
+                    <Button Style="{StaticResource ToolButton}" Content="▧   진입 제한 구역"
+                            Command="{Binding SelectToolCommand}" CommandParameter="Restricted"/>
+                    <Button Style="{StaticResource ToolButton}" Content="×   지우개"
+                            Command="{Binding SelectToolCommand}" CommandParameter="Empty"/>
 
-            <!-- 대시보드 -->
-            <Button Grid.Column="1"
-                    Content="Dashboard"
-                    Command="{Binding DashboardCommand}"
-                    Background="#C8E6C9"
-                    Foreground="#555555"
-                    FontWeight="Bold"
-                    FontSize="14"
-                    Height="45"
-                    Margin="5"
-                    BorderThickness="0"/>
+                    <TextBlock Text="맵" FontWeight="Bold" Foreground="#555555" Margin="0,8,0,14"/>
+                    <Button Style="{StaticResource PanelButton}" Content="맵 크기 16 × 11 블록" IsEnabled="False"/>
+                    <Button Style="{StaticResource PanelButton}" Content="프리셋 불러오기" Command="{Binding ResetCommand}"/>
+                    <Button Style="{StaticResource PanelButton}" Content="맵 초기화" Command="{Binding InitializeCommand}"/>
+                </StackPanel>
+            </Border>
 
-            <!-- 로봇 움직이기 -->
-            <Button Grid.Column="2"
-                    Content="Move Robot"
-                    Command="{Binding MoveRobotCommand}"
-                    Background="#D8C8F0"
-                    Foreground="#555555"
-                    FontWeight="Bold"
-                    FontSize="14"
-                    Height="45"
-                    Margin="5"
-                    BorderThickness="0"/>
+            <Border Grid.Column="1" Padding="25,35" Background="#F4F4F4">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Width="642" Height="442" Background="White" BorderBrush="#333333" BorderThickness="2">
+                        <ItemsControl ItemsSource="{Binding Cells}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="11" Columns="16"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource MapCell}"
+                                            Click="MapCell_Click">
+                                        <Grid>
+                                            <Ellipse Width="12" Height="12" Fill="#2E64D6"
+                                                     Visibility="{Binding IsOnPath, Converter={StaticResource BooleanToVisibility}}"/>
+                                            <Image Source="{StaticResource RobotIcon}" Width="28" Height="28"
+                                                   Visibility="{Binding HasRobot, Converter={StaticResource BooleanToVisibility}}"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                                   AutomationProperties.Name="로봇 현재 위치"/>
+                                            <TextBlock Text="{Binding CellLabel}" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" FontWeight="Bold"/>
+                                        </Grid>
+                                        <Button.ToolTip>
+                                            <TextBlock Text="클릭하여 선택 도구 적용"/>
+                                        </Button.ToolTip>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                    <TextBlock Text="편집 모드 · 도구를 선택한 후 맵을 클릭하세요"
+                               Foreground="#777777" HorizontalAlignment="Center" Margin="0,13,0,0"/>
+                </StackPanel>
+            </Border>
 
+            <Border Grid.Column="2" Background="White" BorderBrush="#D5D5D5" BorderThickness="1,0,0,0" Padding="20,28">
+                <StackPanel>
+                    <TextBlock Text="청소 알고리즘" FontWeight="Bold" Foreground="#555555" Margin="0,0,0,14"/>
+                    <!-- TODO(1): 알고리즘 선택 버튼에 SelectAlgorithmCommand와 AlgorithmType CommandParameter를 연결하세요. -->
+                    <Button Style="{StaticResource PanelButton}" Content="BFS 최단 경로&#x0a;점→점 이동 전용"/>
+                    <Button Style="{StaticResource PanelButton}" Content="지그재그 (Boustrophedon)&#x0a;전 구역 커버리지"/>
+                    <Button Style="{StaticResource PanelButton}" Content="나선형 (Spiral / BSA)&#x0a;중앙부터 바깥으로"/>
+                    <Button Style="{StaticResource PanelButton}" Content="하이브리드 · 추천&#x0a;지그재그 + BFS 복합 이동"
+                            BorderBrush="#2E64D6" BorderThickness="2"/>
+
+                    <TextBlock Text="시뮬레이션 속도" FontWeight="Bold" Foreground="#555555" Margin="0,7,0,12"/>
+                    <Grid Margin="0,0,0,17">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="느림" Grid.Column="0" Foreground="#777777"/>
+                        <!-- TODO(2): 고정 Value를 제거하고 SpeedPercent 또는 DelayMilliseconds에 TwoWay 바인딩하세요. -->
+                        <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="50" Margin="10,0"/>
+                        <TextBlock Text="빠름" Grid.Column="2" Foreground="#777777"/>
+                    </Grid>
+
+                    <!-- TODO(3): 통계 속성은 RobotSimulationService에서 계산하고 ViewModel을 통해 표시하세요. -->
+                    <TextBlock Text="실시간 통계" FontWeight="Bold" Foreground="#555555" Margin="0,0,0,10"/>
+                    <UniformGrid Rows="2" Columns="2">
+                        <Border BorderBrush="#D5D5D5" BorderThickness="1" Padding="10,7" Margin="0,0,5,5">
+                            <StackPanel><TextBlock Text="청소율" Foreground="#777777"/><TextBlock Text="{Binding ProgressPercent, StringFormat={}{0:0}%}" FontSize="20" FontWeight="Bold"/></StackPanel>
+                        </Border>
+                        <Border BorderBrush="#D5D5D5" BorderThickness="1" Padding="10,7" Margin="5,0,0,5">
+                            <StackPanel><TextBlock Text="이동 블록" Foreground="#777777"/><TextBlock Text="{Binding MoveCount}" FontSize="20" FontWeight="Bold"/></StackPanel>
+                        </Border>
+                        <Border BorderBrush="#D5D5D5" BorderThickness="1" Padding="10,7" Margin="0,5,5,0">
+                            <StackPanel><TextBlock Text="중복 방문" Foreground="#777777"/><TextBlock Text="0" FontSize="20" FontWeight="Bold"/></StackPanel>
+                        </Border>
+                        <Border BorderBrush="#D5D5D5" BorderThickness="1" Padding="10,7" Margin="5,5,0,0">
+                            <StackPanel><TextBlock Text="현재 Step" Foreground="#777777"/><TextBlock Text="0" FontSize="20" FontWeight="Bold"/></StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
         </Grid>
 
+        <Border Grid.Row="2" Background="White" BorderBrush="#D5D5D5" BorderThickness="0,1,0,0" Padding="23,15">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="시작" Width="84" Height="45" Command="{Binding StartCommand}"
+                        Background="#2E64D6" Foreground="White" BorderBrush="#2E64D6" FontSize="15"/>
+                <Button Content="한 단계" Width="84" Height="45" Command="{Binding NextCommand}" Margin="8,0,0,0"/>
+                <Button Content="정지" Width="84" Height="45" Command="{Binding StopCommand}" Margin="8,0,0,0"/>
+                <Button Content="초기화" Width="84" Height="45" Command="{Binding InitializeCommand}" Margin="8,0,0,0"/>
+                <TextBlock Text="장애물     진입 제한     청소 완료     경로     로봇"
+                           Foreground="#777777" VerticalAlignment="Center" Margin="40,0,0,0"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

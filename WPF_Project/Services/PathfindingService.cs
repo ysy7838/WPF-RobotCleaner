@@ -6,6 +6,9 @@ public class PathfindingService
 {
     // 장애물 설치 위치
 
+    // TODO(4): BFS 외에 지그재그·나선형·하이브리드를 추가할 때는 이 클래스에 모두 넣기보다
+    // IPathPlanner와 알고리즘별 planner 클래스로 분리하고, 공통 장애물 연결에는 이 BFS를 재사용하세요.
+
     private static readonly (int Row, int Column)[] Directions =
     [
         (-1, 0),
@@ -28,6 +31,8 @@ public class PathfindingService
         {
             return [];
         }
+
+    // TODO(1)(4): 선택된 AlgorithmType에 맞는 planner를 반환하는 factory 또는 dispatcher를 추가하세요.
 
         ValidatePosition(start, rowCount, columnCount, nameof(start));
         ValidatePosition(goal, rowCount, columnCount, nameof(goal));

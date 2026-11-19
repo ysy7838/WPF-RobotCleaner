@@ -9,10 +9,16 @@ public class RobotSimulationService : ObservableObject
     private int _nextIndex;
     private CancellationTokenSource? _movementCancellation;
 
+    // TODO(2): 고정된 500ms 대신 외부에서 변경 가능한 SpeedPercent 또는 DelayMilliseconds를 추가하세요.
+    // TODO(3): Stopwatch, 방문 위치 집합, 거리, 커버리지 등의 통계 상태를 이 서비스에서 관리하세요.
+
     public RobotModel Robot { get; }
     public bool IsRunning => _movementCancellation is not null;
     public bool HasPath => _path.Count > 0;
     public bool HasNextStep => _nextIndex < _path.Count;
+    public int MoveCount => Math.Max(0, _nextIndex - 1);
+
+    // TODO(3): ElapsedTime, Distance, CoveredCellCount, CoveragePercent 등의 계산 속성을 추가하세요.
 
     public double ProgressPercent => _path.Count switch
     {
@@ -60,6 +66,7 @@ public class RobotSimulationService : ObservableObject
         {
             while (HasNextStep)
             {
+                // TODO(2): 500ms 고정값을 현재 속도 속성에서 계산한 지연 시간으로 교체하세요.
                 await Task.Delay(500, cancellation.Token);
                 cancellation.Token.ThrowIfCancellationRequested();
                 Advance();
@@ -100,6 +107,7 @@ public class RobotSimulationService : ObservableObject
 
     private void Advance()
     {
+        // TODO(3): 이동할 때마다 방문 집합, 이동 거리, 커버리지, 통계 PropertyChanged를 갱신하세요.
         var position = _path[_nextIndex];
         _nextIndex++;
         Robot.SetPosition(position);
@@ -121,5 +129,6 @@ public class RobotSimulationService : ObservableObject
     {
         OnPropertyChanged(nameof(HasNextStep));
         OnPropertyChanged(nameof(ProgressPercent));
+        OnPropertyChanged(nameof(MoveCount));
     }
 }
