@@ -19,6 +19,7 @@ namespace WPF_Project
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = new ViewModels.DashboardViewModel(new ViewModels.MapViewModel());
         }
     }
 }

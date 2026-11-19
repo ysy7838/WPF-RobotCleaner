@@ -21,6 +21,7 @@ internal static class Program
             CheckTelemetryAndNotifications();
             CheckInvalidTelemetry();
             CheckLogRetention();
+            CheckMapLink();
             CheckViewLifetimeAndBindings(args.FirstOrDefault());
             Console.WriteLine("PASS: demo transitions/path, telemetry/notifications, validation, log retention, WPF bindings/lifetime/layout.");
             return 0;
@@ -142,7 +143,11 @@ internal static class Program
         PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Error;
 
         var window = new MainWindow();
-        Check(window.Content is DashboardView, "Startup window hosts dashboard");
+        Check(window.Content is Grid root && root.Children.OfType<DashboardView>().Any() &&
+            root.Children.OfType<DashboardMapView>().Any(), "Startup window hosts map and dashboard");
+        Check(window.DataContext is DashboardViewModel linked && linked.TotalCells == 49,
+            "Startup uses team's 7x7 map");
+        Render((FrameworkElement)window.Content, 1320, 900, outputDirectory, "dashboard-linked-map.png");
         window.Close();
         var vm = new DashboardViewModel();
         var host = new Grid { DataContext = vm };
@@ -184,6 +189,31 @@ internal static class Program
         listener.Flush();
         PresentationTraceSources.DataBindingSource.Listeners.Remove(listener);
         Check(string.IsNullOrWhiteSpace(bindingErrors.ToString()), $"WPF binding errors: {bindingErrors}");
+    }
+
+    private static void CheckMapLink()
+    {
+        var source = new MapViewModel();
+        var vm = new DashboardViewModel(source);
+        Check(vm.MapCells.Count == source.Cells.Count && vm.TotalCells == 49 &&
+            vm.MapCells.Count(c => c.IsRobot) == 1 && vm.MapCells.All(c => !c.IsCleaned), "Initial map link");
+        vm.StartDemoCommand.Execute(null);
+        for (int i = 0; i < 49; i++)
+        {
+            vm.AdvanceDemo();
+            Check(vm.MapCells.Count(c => c.IsCleaned) == vm.CleanedCells &&
+                vm.MapCells.Single(c => c.IsRobot).Column == vm.PositionX &&
+                vm.MapCells.Single(c => c.IsRobot).Row == vm.PositionY, "Map and telemetry stay synchronized");
+        }
+        Check(vm.Progress == 100 && vm.Distance == 48 && vm.Position == "(6, 6)", "7x7 completion");
+        vm.ResetDemoCommand.Execute(null);
+        Check(vm.MapCells.All(c => !c.IsCleaned) && vm.MapCells.Single(c => c.IsRobot).Coordinates == "(0, 0)",
+            "Reset map together with dashboard");
+        vm.ApplyTelemetry(3, 2, 10, 12, 49, DashboardRunState.Running);
+        Check(vm.MapCells.All(c => !c.IsCleaned) && vm.MapCells.Single(c => c.IsRobot).Coordinates == "(3, 2)",
+            "External telemetry does not invent cleaned cells");
+        vm.ApplyTelemetry(9, 9, 10, 12, 49, DashboardRunState.Running);
+        Check(vm.MapCells.All(c => !c.IsRobot) && vm.MapDescription.Contains("범위 밖"), "Out-of-map location");
     }
 
     private static void Render(FrameworkElement view, int width, int height, string? directory, string filename)

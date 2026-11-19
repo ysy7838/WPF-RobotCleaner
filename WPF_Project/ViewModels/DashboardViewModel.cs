@@ -19,8 +19,9 @@ public enum DashboardRunState
 public partial class DashboardViewModel : ObservableObject
 {
     public const int MaximumLogCount = 200;
-    private const int DemoColumns = 10;
-    private const int DemoRows = 8;
+    public int MapColumns { get; }
+    public int MapRows { get; }
+    public ReadOnlyObservableCollection<DashboardMapCell> MapCells { get; }
     private readonly ObservableCollection<string> logs = new();
 
     [ObservableProperty]
@@ -67,10 +68,31 @@ public partial class DashboardViewModel : ObservableObject
     }
 
     public DashboardViewModel(bool enableDemo)
+        : this(enableDemo, 10, 8)
     {
+    }
+
+    // Use the team's actual cell coordinates, rather than maintaining a second 7x7 definition.
+    public DashboardViewModel(MapViewModel map)
+        : this(true, map.Cells.Max(c => c.Column) + 1, map.Cells.Max(c => c.Row) + 1)
+    {
+        if (map.Cells.Count != MapCells.Count ||
+            map.Cells.Select(c => (c.Row, c.Column)).Distinct().Count() != MapCells.Count ||
+            map.Cells.Any(c => c.Row < 0 || c.Column < 0))
+            throw new ArgumentException("연결할 맵은 중복이나 빈칸이 없는 직사각형 격자여야 합니다.", nameof(map));
+    }
+
+    private DashboardViewModel(bool enableDemo, int columns, int rows)
+    {
+        MapColumns = columns;
+        MapRows = rows;
+        MapCells = new ReadOnlyObservableCollection<DashboardMapCell>(new ObservableCollection<DashboardMapCell>(
+            Enumerable.Range(0, rows).SelectMany(row => Enumerable.Range(0, columns)
+                .Select(column => new DashboardMapCell(row, column)))));
         Logs = new ReadOnlyObservableCollection<string>(logs);
         IsDemoMode = enableDemo;
-        TotalCells = enableDemo ? DemoColumns * DemoRows : 0;
+        TotalCells = enableDemo ? MapColumns * MapRows : 0;
+        RefreshMap();
         AddLog(enableDemo ? "대시보드 준비 · 데모 시작을 눌러 주세요." : "대시보드 준비 · 외부 데이터를 기다립니다.");
     }
 
@@ -81,8 +103,12 @@ public partial class DashboardViewModel : ObservableObject
     public string LastUpdatedText => LastUpdated?.ToString("HH:mm:ss") ?? "업데이트 없음";
     public string DataSourceText => IsDemoMode ? "데모 데이터" : "외부 데이터";
     public string DataSourceDescription => IsDemoMode
-        ? "10 × 8 예시 공간의 데모입니다. 실제 로봇 데이터가 아닙니다."
+        ? $"{MapColumns} × {MapRows} 예시 공간의 데모입니다. 실제 로봇 데이터가 아닙니다."
         : "연결된 외부 상태를 표시합니다. 데모 제어는 비활성화됩니다.";
+    public string MapDescription => IsDemoMode
+        ? "초록색: 청소한 칸 · R: 현재 로봇 위치 · 좌표는 (X, Y)"
+        : "외부 데이터는 현재 위치만 표시합니다. 청소 영역 정보는 아직 연결되지 않았습니다." +
+            (PositionX >= MapColumns || PositionY >= MapRows ? " 현재 위치가 맵 범위 밖입니다." : "");
     public string StatusText => RunState switch
     {
         DashboardRunState.Running => "청소 중",
@@ -126,7 +152,8 @@ public partial class DashboardViewModel : ObservableObject
         PositionY = 0;
         Distance = 0;
         CleanedCells = 0;
-        TotalCells = DemoColumns * DemoRows;
+        TotalCells = MapColumns * MapRows;
+        RefreshMap();
         LastUpdated = DateTime.Now;
         AddLog("데모 초기화 · 위치, 거리, 진행률을 초기화했습니다.");
     }
@@ -143,12 +170,13 @@ public partial class DashboardViewModel : ObservableObject
         if (!CanPauseDemo()) return;
 
         int sample = CleanedCells;
-        int row = sample / DemoColumns;
-        int column = sample % DemoColumns;
-        PositionX = row % 2 == 0 ? column : DemoColumns - 1 - column;
+        int row = sample / MapColumns;
+        int column = sample % MapColumns;
+        PositionX = row % 2 == 0 ? column : MapColumns - 1 - column;
         PositionY = row;
         Distance = sample;
         CleanedCells = sample + 1;
+        RefreshMap();
         LastUpdated = DateTime.Now;
         AddLog($"데모 이동 · 위치 {Position} · 이동 {Distance}칸 · 청소 {CoverageText}");
 
@@ -189,12 +217,25 @@ public partial class DashboardViewModel : ObservableObject
         CleanedCells = cleanedCells;
         TotalCells = totalCells;
         RunState = state;
+        RefreshMap();
         LastUpdated = DateTime.Now;
 
         if (!string.IsNullOrWhiteSpace(message))
             AddLog(message);
         else if (hasChanged)
             AddLog($"외부 상태 · {StatusText} · 위치 {Position} · 이동 {Distance}칸 · 청소 {CoverageText}");
+    }
+
+    private void RefreshMap()
+    {
+        foreach (var cell in MapCells)
+        {
+            int pathIndex = cell.Row * MapColumns +
+                (cell.Row % 2 == 0 ? cell.Column : MapColumns - 1 - cell.Column);
+            cell.IsCleaned = IsDemoMode && pathIndex < CleanedCells;
+            cell.IsRobot = cell.Column == PositionX && cell.Row == PositionY;
+        }
+        OnPropertyChanged(nameof(MapDescription));
     }
 
     private void AddLog(string message)
