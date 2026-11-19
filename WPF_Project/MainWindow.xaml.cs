@@ -8,6 +8,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WPF_Project.Models;
+using WPF_Project.Services;
+using WPF_Project.ViewModels;
 
 namespace WPF_Project
 {
